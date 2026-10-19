@@ -1,6 +1,7 @@
 import os
 import time
 from datetime import datetime
+import getpass
 
 cardapio = {
 
@@ -23,6 +24,8 @@ def tela_inicial():
     print("=" * 50)
     print("\n           Bem-vindo(a) ao nosso Totem!\n")
     input("      [ Pressione ENTER para iniciar o seu pedido ]")
+    print("\nA carregar o sistema...")
+    time.sleep(1)
 
 
 def tela_catalogo():
@@ -39,13 +42,15 @@ def tela_catalogo():
         print("[4] 🛒 Ver Carrinho e Finalizar")
         print("[0] Cancelar Pedido / Voltar ao Início")
 
-        opcao = input("\nEscolha uma categoria (1-3) ou 0 para cancelar: ")
+        opcao = input("\nEscolha uma categoria (1-3) ou 0 para cancelar: ").strip()
 
         if opcao == "0":
             carrinho.clear() # esvazia o carrinho se o cliente desistir
             break
         elif opcao == "4":
             tela_carrinho()
+            if len(carrinho) == 0:
+                break
         elif opcao in cardapio:
             tela_itens(opcao)
         else:
@@ -71,26 +76,33 @@ def tela_itens(id_categoria):
 
         print("\n[0] Voltar às Categorias")
         
-        escolha = input("\nDigite o código do produto para adicionar: ")
+        escolha = input("\nDigite o código do produto para adicionar: ").strip()
         
         if escolha == "0":
             break
 
         # ve se o cliente digitou um número e se esse número existe na categoria
         elif escolha.isdigit() and int(escolha) in categoria['itens']:
-            codigo_item = int(escolha)
-            produto_selecionado = categoria['itens'][codigo_item]
-
-            # coloca um dicionário com os dados do produto na lista do carrinho
-            carrinho.append({
-                "codigo": codigo_item,
-                "nome": produto_selecionado[0],
-                "preco": produto_selecionado[1]
-            })
+            if len(carrinho) >= 20:
+                print("\n- Limite máximo de 20 itens por pedido atingido!")
+                print("Por favor, finalize esta compra antes de pedir mais itens.")
+                input("\nPressione ENTER para voltar às categorias...")
+                break # Volta para as categorias sem adicionar
             
-            print(f"\n-> {produto_selecionado[0]} adicionado ao carrinho com sucesso!")
-            input("\nPressione ENTER para continuar...")
-            break # volta no menu de categorias para continuar comprando
+            else:
+                codigo_item = int(escolha)
+                produto_selecionado = categoria['itens'][codigo_item]
+
+                # coloca um dicionário com os dados do produto na lista do carrinho
+                carrinho.append({
+                    "codigo": codigo_item,
+                    "nome": produto_selecionado[0],
+                    "preco": produto_selecionado[1]
+                })
+            
+                print(f"\n-> {produto_selecionado[0]} adicionado ao carrinho com sucesso!")
+                input("\nPressione ENTER para continuar...")
+                break # volta no menu de categorias para continuar comprando
         else:
             print("\nCódigo inválido. Tente novamente.")
             input("\nPressione ENTER para continuar...")
@@ -158,17 +170,18 @@ def tela_carrinho():
         print("\n[1] Finalizar Pedido e Pagar")
         print("[0] Voltar para o Cardápio")
         
-        opcao = input("\nEscolha uma opção: ")
-        
+        while True:
+            opcao = input("\nEscolha uma opção: ").strip()
+            if opcao in ["0", "1"]:
+                break
+            print("\nOpção inválida. Digite 0 ou 1.")
+
         if opcao == "1":
             tela_pagamento(subtotal)
             break
         elif opcao == "0":
             break
-        else:
-            print("\nOpção inválida.")
-            input("Pressione ENTER para tentar novamente...")
-
+        
 def gerar_recibo(subtotal, forma_pagamento, tempo_estimado):
     agora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     # o 'a' significa 'append' (adicionar), não apaga as vendas anteriores
@@ -203,13 +216,17 @@ def tela_pagamento(subtotal):
         print("[2] PIX")
         print("[0] Cancelar Pedido")
     
-        opcao = input("\nEscolha a forma de pagamento: ")
+        while True:
+            opcao = input("\nEscolha a forma de pagamento: ").strip()
+            if opcao in ["0", "1", "2"]:
+                break
+            print("\nOpção inválida. Digite 0, 1 ou 2.")
     
         if opcao == "1":
             forma_pagamento = "Cartão"
             print("\n-> Por favor, aproxime ou insira o cartão na máquina...")
             time.sleep(2)
-            input("Digite a sua senha e pressione ENTER: ")
+            getpass.getpass("Digite a sua senha e pressione ENTER: ")
             print("\nA processar pagamento com o banco...")
             time.sleep(2)
             print("✅ Pagamento Aprovado!")
@@ -241,10 +258,6 @@ def tela_pagamento(subtotal):
             time.sleep(2)
             return # volta pra tela inicial sem gerar recibo
         
-        else:
-            print("\nOpção inválida.")
-            input("Pressione ENTER para tentar novamente...")
-    
     # diferencial lógico: estimaa o tempo de preparo
     # fórmula: 2 min base + (1.5 min por cada item) + (simulação de 3 pedidos na fila * 2 min)
     print("-" * 50)
@@ -273,4 +286,9 @@ def main():
         tela_catalogo()
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        # se alguém tentar quebrar o totem com Ctrl+C, o terminal limpa e desliga em segurança
+        limpar_tela()
+        print("Sistema encerrado de forma segura pelo Administrador.")
