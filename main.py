@@ -1,4 +1,6 @@
 import os
+import time
+from datetime import datetime
 
 cardapio = {
 
@@ -140,15 +142,19 @@ def tela_carrinho():
             preco_pao = cardapio["3"]["itens"][31][1]
             nome_pao = cardapio["3"]["itens"][31][0]
             
-            resposta = input(f"\nDeseja adicionar 1x {nome_pao} (R$ {preco_pao:.2f})? (S/N): ").strip().upper()
+            while True:
+                resposta = input(f"\nDeseja adicionar 1x {nome_pao} (R$ {preco_pao:.2f})? (S/N): ").strip().upper()
+                if resposta in ["S", "N"]:
+                    break
+                print("Por favor, digite 'S' para Sim ou 'N' para Não.")
             
             if resposta == "S":
                 carrinho.append({"codigo": 31, "nome": nome_pao, "preco": preco_pao})
                 print(f"\n-> {nome_pao} adicionado com sucesso!")
                 input("Pressione ENTER para atualizar o carrinho...")
-                continue # o continue faz o loop voltar ao início e recalcular o subtotal atualizado
+                continue # volta ao início do loop para recalcular o subtotal
         
-        # opções Finais
+        # opções finais
         print("\n[1] Finalizar Pedido e Pagar")
         print("[0] Voltar para o Cardápio")
         
@@ -163,62 +169,95 @@ def tela_carrinho():
             print("\nOpção inválida.")
             input("Pressione ENTER para tentar novamente...")
 
-def gerar_recibo(subtotal, valor_inserido, troco, tempo_estimado):
-    # o 'w' significa 'write' (escrever), cria ou substitui o ficheiro recibo.txt
-    with open("recibo.txt", "w", encoding="utf-8") as ficheiro:
+def gerar_recibo(subtotal, forma_pagamento, tempo_estimado):
+    agora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    # o 'a' significa 'append' (adicionar), não apaga as vendas anteriores
+    with open("recibo.txt", "a", encoding="utf-8") as ficheiro:
         ficheiro.write("=" * 40 + "\n")
         ficheiro.write("           SAC - CAFETERIA\n")
+        ficheiro.write(f"           {agora}\n")
         ficheiro.write("=" * 40 + "\n")
         ficheiro.write("ITENS DO PEDIDO:\n")
         for item in carrinho:
             ficheiro.write(f"- 1x {item['nome'].ljust(20, '.')} R$ {item['preco']:.2f}\n")
         ficheiro.write("-" * 40 + "\n")
-        ficheiro.write(f"TOTAL A PAGAR:   R$ {subtotal:.2f}\n")
-        ficheiro.write(f"VALOR INSERIDO:  R$ {valor_inserido:.2f}\n")
-        ficheiro.write(f"TROCO:           R$ {troco:.2f}\n")
+        ficheiro.write(f"TOTAL PAGO:   R$ {subtotal:.2f}\n")
+        ficheiro.write(f"PAGAMENTO VIA:  {forma_pagamento}\n")
         ficheiro.write("-" * 40 + "\n")
         ficheiro.write(f"TEMPO ESTIMADO:  {tempo_estimado} minutos\n")
         ficheiro.write("=" * 40 + "\n")
-        ficheiro.write("Obrigado pela preferência!\n")
+        ficheiro.write("Obrigado pela preferência!\n\n\n")
 
 def tela_pagamento(subtotal):
-    limpar_tela()
-    print("=" * 50)
-    print("                 F I N A L I Z A R")
-    print("=" * 50)
-    print(f"TOTAL A PAGAR: R$ {subtotal:.2f}\n")
-    
-    # lógica de pagamento e troco
+
+    forma_pagamento = ""
+
     while True:
-        try:
-            # .replace permite que o utilizador digite "10,50" ou "10.50" sem dar erro
-            entrada = input("Valor inserido em dinheiro (R$): ").replace(',', '.')
-            valor_inserido = float(entrada)
+        limpar_tela()
+        print("=" * 50)
+        print("                 F I N A L I Z A R")
+        print("=" * 50)
+        print(f"TOTAL A PAGAR: R$ {subtotal:.2f}\n")
+        print("Formas de Pagamento disponíveis:")
+        print("[1] Cartão de Débito / Crédito")
+        print("[2] PIX")
+        print("[0] Cancelar Pedido")
+    
+        opcao = input("\nEscolha a forma de pagamento: ")
+    
+        if opcao == "1":
+            forma_pagamento = "Cartão"
+            print("\n-> Por favor, aproxime ou insira o cartão na máquina...")
+            time.sleep(2)
+            input("Digite a sua senha e pressione ENTER: ")
+            print("\nA processar pagamento com o banco...")
+            time.sleep(2)
+            print("✅ Pagamento Aprovado!")
+            break
+        
+        elif opcao == "2":
+            forma_pagamento = "PIX"
+            print("\n-> A ligar ao Banco Central...")
+            time.sleep(1)
+            print("-> A gerar QR Code...")
+            time.sleep(1)
+        
+            # arte ASCII para simular um QR Code no terminal
+            print("\n   █▀▀▀▀▀█ ▀▀▀█▀ █▀▀▀▀▀█")
+            print("   █ ███ █ █ █ █ █ ███ █")
+            print("   █ ▀▀▀ █ █▀▀██ █ ▀▀▀ █")
+            print("   ▀▀▀▀▀▀▀ ▀ ▀ ▀ ▀▀▀▀▀▀▀")
+            print("\nAbra a aplicação do seu banco e leia o código acima.")
             
-            if valor_inserido >= subtotal:
-                troco = valor_inserido - subtotal
-                break
-            else:
-                print("Valor insuficiente. Insira um valor igual ou superior ao total.\n")
-        except ValueError:
-            print("Valor inválido. Digite apenas números (ex: 50.00).\n")
-            
-    print("\nA calcular...")
-    print(f"TROCO: R$ {troco:.2f}")
-    print("-" * 50)
+            input("Pressione ENTER após confirmar o pagamento no telemóvel...")
+            print("\nA verificar transferência...")
+            time.sleep(1.5)
+            print("✅ Pagamento PIX Recebido com Sucesso!")
+            break
+        
+        elif opcao == "0":
+            print("\nPedido cancelado pelo utilizador. A voltar ao início...")
+            carrinho.clear()
+            time.sleep(2)
+            return # volta pra tela inicial sem gerar recibo
+        
+        else:
+            print("\nOpção inválida.")
+            input("Pressione ENTER para tentar novamente...")
     
     # diferencial lógico: estimaa o tempo de preparo
     # fórmula: 2 min base + (1.5 min por cada item) + (simulação de 3 pedidos na fila * 2 min)
+    print("-" * 50)
     tempo_base = 2 
     tempo_por_item = len(carrinho) * 1.5
     pedidos_na_fila = 3 
     tempo_estimado = int(tempo_base + tempo_por_item + (pedidos_na_fila * 2))
     
-    print(f"⏳ TEMPO ESTIMADO DE PREPARO: {tempo_estimado} minutos")
+    print(f"- TEMPO ESTIMADO DE PREPARO: {tempo_estimado} minutos")
     print("(Cálculo baseado na fila atual e nos itens)\n")
     
     # gera o ficheiro .txt
-    gerar_recibo(subtotal, valor_inserido, troco, tempo_estimado)
+    gerar_recibo(subtotal, forma_pagamento, tempo_estimado)
     
     print("Pedido Finalizado! Recibo gerado em 'recibo.txt'.")
     print("Aguarde ser chamado no balcão. Obrigado!")
