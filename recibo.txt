@@ -1,16 +1,17 @@
 ========================================
            SAC - CAFETERIA
-           19/10/2026 15:15:08
+           20/10/2026 16:06:37
            PEDIDO Nº 0001
 ========================================
 ITENS DO PEDIDO:
-- 1x Café Expresso....... R$ 5.00
-- 1x Pão de Queijo....... R$ 4.50
+- 1x Torta de Limão...... R$ 10.00
+- 1x Cappuccino.......... R$ 8.00
+- 1x Brownie............. R$ 8.00
 ----------------------------------------
-TOTAL PAGO:   R$ 9.50
-PAGAMENTO VIA:  Cartão
+TOTAL PAGO:      R$ 26.00
+PAGAMENTO VIA:   Cartão
 ----------------------------------------
-TEMPO ESTIMADO:  11 minutos
+TEMPO ESTIMADO:  12 minutos
 ========================================
 Obrigado pela preferência!
 
